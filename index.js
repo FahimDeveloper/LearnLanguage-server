@@ -47,6 +47,10 @@ async function run() {
             const result = await usersCollection.find(query).toArray();
             res.send(result)
         });
+        app.get('/courses', async (req, res) => {
+            const result = await courseCollection.find().toArray();
+            res.send(result)
+        })
         // initialiy get jwt token
         app.get('/jwt', async (req, res) => {
             const user = req.body;
