@@ -39,12 +39,21 @@ async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
         await client.connect();
+        const usersCollection = client.db('learnLanguage').collection('usersCollection');
+        const courseCollection = client.db('learnLanguage').collection('courseCollection');
+
+        app.get('/users', async (req, res) => {
+            const query = { role: "instructor" };
+            const result = await usersCollection.find(query).toArray();
+            res.send(result)
+        });
         // initialiy get jwt token
         app.get('/jwt', async (req, res) => {
             const user = req.body;
             const token = jwt.sign(user, process.env.ACCESS_TOKEN, { expiresIn: '1h' });
             res.send(token)
-        })
+        });
+
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
