@@ -42,13 +42,22 @@ async function run() {
         const usersCollection = client.db('learnLanguage').collection('usersCollection');
         const courseCollection = client.db('learnLanguage').collection('courseCollection');
 
-        app.get('/users', async (req, res) => {
+        app.get('/topInstructors', async (req, res) => {
+            const query = { role: "instructor" };
+            const result = await usersCollection.find(query).sort({ totalStudents: -1 }).toArray();
+            res.send(result)
+        });
+        app.get('/topCourses', async (req, res) => {
+            const result = await courseCollection.find().sort({ students: -1 }).toArray();
+            res.send(result)
+        })
+        app.get('/instructors', async (req, res) => {
             const query = { role: "instructor" };
             const result = await usersCollection.find(query).toArray();
             res.send(result)
         });
         app.get('/courses', async (req, res) => {
-            const result = await courseCollection.find().toArray();
+            const result = await courseCollection.find({ status: "approved" }).toArray();
             res.send(result)
         })
         // initialiy get jwt token
