@@ -66,6 +66,16 @@ async function run() {
             const token = jwt.sign(user, process.env.ACCESS_TOKEN, { expiresIn: '1h' });
             res.send(token)
         });
+        // post new user
+        app.post('/addUser', async (req, res) => {
+            const userData = req.body;
+            const findUser = await usersCollection.findOne({ userEmail: userData.userEmail })
+            if (findUser) {
+                return res.send({ available: 'available' })
+            }
+            const result = await usersCollection.insertOne(userData)
+            res.send(result);
+        })
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
