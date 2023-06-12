@@ -42,6 +42,7 @@ async function run() {
         await client.connect();
         const usersCollection = client.db('learnLanguage').collection('usersCollection');
         const courseCollection = client.db('learnLanguage').collection('courseCollection');
+        const cartCollection = client.db('learnLanguage').collection('cartCollection');
 
         app.get('/topInstructors', async (req, res) => {
             const query = { role: "instructor" };
@@ -80,6 +81,16 @@ async function run() {
                 return res.send({ available: 'available' })
             }
             const result = await usersCollection.insertOne(userData)
+            res.send(result);
+        });
+        app.post('/addToCart', async (req, res) => {
+            const cartData = req.body;
+            const result = await cartCollection.insertOne(cartData);
+            res.send(result);
+        });
+        app.get('/cartData/:email', async (req, res) => {
+            const email = req.params.email;
+            const result = await cartCollection.find({ userEmail: email }).toArray();
             res.send(result);
         })
 
