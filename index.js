@@ -64,6 +64,9 @@ async function run() {
         })
         app.get('/users/:email', verifyJWT, async (req, res) => {
             const email = req.params.email
+            if (req.decoded.email !== email) {
+                return res.status(403).send({ error: true, message: 'forbidden access' })
+            }
             const result = await usersCollection.findOne({ userEmail: email })
             res.send(result)
         })
@@ -88,8 +91,11 @@ async function run() {
             const result = await cartCollection.insertOne(cartData);
             res.send(result);
         });
-        app.get('/cartData/:email', async (req, res) => {
+        app.get('/cartData/:email', verifyJWT, async (req, res) => {
             const email = req.params.email;
+            if (req.decoded.email !== email) {
+                return res.status(403).send({ error: true, message: 'forbidden access' })
+            }
             const result = await cartCollection.find({ userEmail: email }).toArray();
             res.send(result);
         })
