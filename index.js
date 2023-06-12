@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const jwt = require('jsonwebtoken');
 const { MongoClient, ServerApiVersion } = require('mongodb');
 require('dotenv').config();
 const app = express();
@@ -60,8 +61,13 @@ async function run() {
             const result = await courseCollection.find({ status: "approved" }).toArray();
             res.send(result)
         })
+        app.get('/users/:email', verifyJWT, async (req, res) => {
+            const email = req.params.email
+            const result = await usersCollection.findOne({ userEmail: email })
+            res.send(result)
+        })
         // initialiy get jwt token
-        app.get('/jwt', async (req, res) => {
+        app.post('/jwt', async (req, res) => {
             const user = req.body;
             const token = jwt.sign(user, process.env.ACCESS_TOKEN, { expiresIn: '1h' });
             res.send(token)
