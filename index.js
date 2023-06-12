@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 5000;
@@ -86,8 +86,15 @@ async function run() {
             const result = await usersCollection.insertOne(userData)
             res.send(result);
         });
-        app.post('/addToCart', async (req, res) => {
+        app.post('/addToCart', verifyJWT, async (req, res) => {
             const cartData = req.body;
+            if (req.decoded.email !== cartData.userEmail) {
+                return res.status(403).send({ error: true, message: 'forbidden access' })
+            }
+            const findCourse = await cartCollection.findOne({ courseId: cartData.courseId });
+            if (findCourse) {
+                return res.send({ available: "available" })
+            }
             const result = await cartCollection.insertOne(cartData);
             res.send(result);
         });
@@ -97,6 +104,15 @@ async function run() {
                 return res.status(403).send({ error: true, message: 'forbidden access' })
             }
             const result = await cartCollection.find({ userEmail: email }).toArray();
+            res.send(result);
+        });
+        app.delete('/deleteToCart', verifyJWT, async (req, res) => {
+            const id = req.query.id
+            if (req.decoded.email !== req.query.email) {
+                return res.status(403).send({ error: true, message: 'forbidden access' })
+            }
+            const query = { _id: new ObjectId(id) };
+            const result = await cartCollection.deleteOne(query);
             res.send(result);
         })
 
