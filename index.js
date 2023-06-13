@@ -94,6 +94,10 @@ async function run() {
                 return res.status(403).send({ error: true, message: 'forbidden access' })
             }
             const findCourse = await cartCollection.findOne({ courseId: cartData.courseId });
+            const findEnrolledCourse = await paymentCollection.findOne({ courseId: cartData.courseId })
+            if (findEnrolledCourse) {
+                return res.send({ enrolled: "enrolled" })
+            }
             if (findCourse) {
                 return res.send({ available: "available" })
             }
