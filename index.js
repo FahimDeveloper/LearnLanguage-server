@@ -140,6 +140,14 @@ async function run() {
             const deleteResult = await cartCollection.deleteOne(query);
             const result = await paymentCollection.insertOne(paymentData);
             res.send({ result, deleteResult });
+        });
+        app.get('/paymentData/:email', verifyJWT, async (req, res) => {
+            const email = req.params.email;
+            if (req.decoded.email !== email) {
+                return res.status(403).send({ error: true, message: 'forbidden access' })
+            }
+            const result = await paymentCollection.find({ userEmail: email }).sort({ date: -1 }).toArray();
+            res.send(result)
         })
 
         // Send a ping to confirm a successful connection
