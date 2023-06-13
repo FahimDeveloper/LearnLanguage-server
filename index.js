@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const e = require('express');
 require('dotenv').config();
 const stripe = require("stripe")(process.env.PAYMENT_GATEWAY_KEY)
 const app = express();
@@ -45,6 +46,19 @@ async function run() {
         const courseCollection = client.db('learnLanguage').collection('courseCollection');
         const cartCollection = client.db('learnLanguage').collection('cartCollection');
         const paymentCollection = client.db('learnLanguage').collection('paymentCollection');
+
+        const verifyInstructor = async (req, res, next) => {
+            const email = req.params.email;
+            const decodedEmail = req.decoded.email;
+            if (email !== decodedEmail) {
+                return res.status(403).send({ error: true, message: 'forbidden access' })
+            }
+            const findInstructor = await usersCollection.findOne({ userEmail: email });
+            if (findInstructor.role !== "instructor") {
+                return res.status(403).send({ error: true, message: 'forbidden access' })
+            }
+            next()
+        }
 
         app.get('/topInstructors', async (req, res) => {
             const query = { role: "instructor" };
@@ -151,6 +165,11 @@ async function run() {
                 return res.status(403).send({ error: true, message: 'forbidden access' })
             }
             const result = await paymentCollection.find({ userEmail: email }).sort({ date: -1 }).toArray();
+            res.send(result)
+        });
+        app.post('/addCourse/:email', verifyJWT, verifyInstructor, async (req, res) => {
+            const courseData = req.body
+            const result = await courseCollection.insertOne(courseData);
             res.send(result)
         })
 
