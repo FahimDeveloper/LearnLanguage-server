@@ -44,6 +44,7 @@ async function run() {
         const usersCollection = client.db('learnLanguage').collection('usersCollection');
         const courseCollection = client.db('learnLanguage').collection('courseCollection');
         const cartCollection = client.db('learnLanguage').collection('cartCollection');
+        const paymentCollection = client.db('learnLanguage').collection('paymentCollection');
 
         app.get('/topInstructors', async (req, res) => {
             const query = { role: "instructor" };
@@ -129,6 +130,17 @@ async function run() {
                 clientSecret: paymentIntent.client_secret,
             })
         });
+        app.post('/payment', verifyJWT, async (req, res) => {
+            const paymentData = req.body;
+            const cartId = req.query.cartId;
+            if (req.decoded.email !== req.query.email) {
+                return res.status(403).send({ error: true, message: 'forbidden access' })
+            }
+            const query = { _id: new ObjectId(cartId) }
+            const deleteResult = await cartCollection.deleteOne(query);
+            const result = await paymentCollection.insertOne(paymentData);
+            res.send({ result, deleteResult });
+        })
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
