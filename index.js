@@ -189,6 +189,11 @@ async function run() {
             const email = req.params.email;
             const result = await courseCollection.find({ instructorEmail: email }).sort({ date: -1 }).toArray()
             res.send(result)
+        });
+
+        app.get('/allCourse/:email', verifyJWT, verifyAdmin, async (req, res) => {
+            const result = await courseCollection.find().sort({ date: -1 }).toArray();
+            res.send(result);
         })
 
         // Send a ping to confirm a successful connection
