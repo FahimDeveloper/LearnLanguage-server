@@ -120,13 +120,9 @@ async function run() {
             if (req.decoded.email !== cartData.userEmail) {
                 return res.status(403).send({ error: true, message: 'forbidden access' })
             }
-            const findCourse = await cartCollection.findOne({ courseId: cartData.courseId });
             const findEnrolledCourse = await paymentCollection.findOne({ courseId: cartData.courseId })
             if (findEnrolledCourse) {
                 return res.send({ enrolled: "enrolled" })
-            }
-            if (findCourse) {
-                return res.send({ available: "available" })
             }
             const result = await cartCollection.insertOne(cartData);
             res.send(result);
@@ -193,6 +189,16 @@ async function run() {
 
         app.get('/allCourse/:email', verifyJWT, verifyAdmin, async (req, res) => {
             const result = await courseCollection.find().sort({ date: -1 }).toArray();
+            res.send(result);
+        })
+        app.get('/accessCourse/:email', verifyJWT, async (req, res) => {
+            const email = req.params.email;
+            if (req.decoded.email !== email) {
+                return res.status(403).send({ error: true, message: 'forbidden access' })
+            }
+            const findCourse = await paymentCollection.find({ userEmail: email }).toArray();
+            const query = { _id: { $in: findCourse.map(course => new ObjectId(course.courseId)) } }
+            const result = await courseCollection.find(query).toArray();
             res.send(result);
         })
 
