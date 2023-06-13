@@ -46,7 +46,20 @@ async function run() {
         const courseCollection = client.db('learnLanguage').collection('courseCollection');
         const cartCollection = client.db('learnLanguage').collection('cartCollection');
         const paymentCollection = client.db('learnLanguage').collection('paymentCollection');
-
+        //verify admin
+        const verifyAdmin = async (req, res, next) => {
+            const email = req.params.email;
+            const decodedEmail = req.decoded.email;
+            if (email !== decodedEmail) {
+                return res.status(403).send({ error: true, message: 'forbidden access' })
+            }
+            const findAdmin = await usersCollection.findOne({ userEmail: email });
+            if (findAdmin.role !== "admin") {
+                return res.status(403).send({ error: true, message: 'forbidden access' })
+            }
+            next()
+        }
+        //verify Instrucor
         const verifyInstructor = async (req, res, next) => {
             const email = req.params.email;
             const decodedEmail = req.decoded.email;
