@@ -88,7 +88,7 @@ async function run() {
             res.send(result)
         });
         app.get('/courses', async (req, res) => {
-            const result = await courseCollection.find({ status: "approved" }).toArray();
+            const result = await courseCollection.find({ status: "approved", role: 'instructor' }).toArray();
             res.send(result)
         })
         app.get('/users/:email', verifyJWT, async (req, res) => {
@@ -98,6 +98,10 @@ async function run() {
             }
             const result = await usersCollection.findOne({ userEmail: email })
             res.send(result)
+        });
+        app.get('/allUsers/:email', verifyJWT, verifyAdmin, async (req, res) => {
+            const result = await usersCollection.find().toArray();
+            res.send(result);
         })
         // initialiy get jwt token
         app.post('/jwt', async (req, res) => {
