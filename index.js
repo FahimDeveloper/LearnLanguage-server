@@ -199,9 +199,21 @@ async function run() {
             res.send({ result1, result2 });
         })
         app.post('/addCourse/:email', verifyJWT, verifyInstructor, async (req, res) => {
-            const courseData = req.body
-            const result = await courseCollection.insertOne(courseData);
-            res.send(result)
+            const courseData = req.body;
+            const email = req.params.email;
+            const filter = { userEmail: email };
+            const findInstructor = await usersCollection.findOne(filter);
+            const options = { upsert: true }
+            if (findInstructor) {
+                const updateDoc = {
+                    $set: {
+                        availableCourse: findInstructor.availableCourse ? findInstructor.availableCourse + 1 : 1
+                    }
+                }
+                const result1 = await courseCollection.insertOne(courseData);
+                const result2 = await usersCollection.updateOne(filter, updateDoc, options)
+                res.send({ result1, result2 });
+            }
         });
         app.get('/instructorCourse/:email', verifyJWT, verifyInstructor, async (req, res) => {
             const email = req.params.email;
