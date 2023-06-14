@@ -220,7 +220,6 @@ async function run() {
             const result = await courseCollection.find({ instructorEmail: email }).sort({ date: -1 }).toArray()
             res.send(result)
         });
-
         app.get('/allCourse/:email', verifyJWT, verifyAdmin, async (req, res) => {
             const result = await courseCollection.find().sort({ date: -1 }).toArray();
             res.send(result);
@@ -233,6 +232,19 @@ async function run() {
             const findCourse = await paymentCollection.find({ userEmail: email }).toArray();
             const query = { _id: { $in: findCourse.map(course => new ObjectId(course.courseId)) } }
             const result = await courseCollection.find(query).toArray();
+            res.send(result);
+        });
+        app.patch('/changeStatus/:email/:id', verifyJWT, verifyAdmin, async (req, res) => {
+            const id = req.params.id;
+            const status = req.body;
+            const filter = { _id: new ObjectId(id) };
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: {
+                    status: status.status
+                }
+            }
+            const result = await courseCollection.updateOne(filter, updateDoc, options);
             res.send(result);
         })
 
