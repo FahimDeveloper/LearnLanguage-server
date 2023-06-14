@@ -115,12 +115,13 @@ async function run() {
             const result = await usersCollection.insertOne(userData)
             res.send(result);
         });
-        app.post('/addToCart', verifyJWT, async (req, res) => {
+        app.post('/addToCart/:email', verifyJWT, async (req, res) => {
             const cartData = req.body;
-            if (req.decoded.email !== cartData.userEmail) {
+            const email = req.params.email;
+            if (req.decoded.email !== email) {
                 return res.status(403).send({ error: true, message: 'forbidden access' })
             }
-            const findEnrolledCourse = await paymentCollection.findOne({ courseId: cartData.courseId })
+            const findEnrolledCourse = await paymentCollection.findOne({ courseId: cartData.courseId, userEmail: email })
             if (findEnrolledCourse) {
                 return res.send({ enrolled: "enrolled" })
             }
@@ -176,6 +177,27 @@ async function run() {
             const result = await paymentCollection.find({ userEmail: email }).sort({ date: -1 }).toArray();
             res.send(result)
         });
+        app.patch('/updateCourseInfo/:id', verifyJWT, async (req, res) => {
+            const filter = { _id: new ObjectId(req.params.id) };
+            const findCourse = await courseCollection.findOne(filter);
+            const findInstructor = await usersCollection.findOne({ userEmail: findCourse.instructorEmail });
+            const filter2 = { _id: new ObjectId(findInstructor._id) }
+            const options = { upsert: true };
+            const updateDoc1 = {
+                $set: {
+                    students: findCourse.students + 1,
+                    availableSeat: findCourse.availableSeat - 1
+                }
+            }
+            const result1 = await courseCollection.updateOne(filter, updateDoc1, options)
+            const updateDoc2 = {
+                $set: {
+                    totalStudents: findInstructor.totalStudents ? findInstructor.totalStudents + 1 : 1
+                }
+            }
+            const result2 = await usersCollection.updateOne(filter2, updateDoc2, options)
+            res.send({ result1, result2 });
+        })
         app.post('/addCourse/:email', verifyJWT, verifyInstructor, async (req, res) => {
             const courseData = req.body
             const result = await courseCollection.insertOne(courseData);
