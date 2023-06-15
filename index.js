@@ -41,7 +41,7 @@ const client = new MongoClient(uri, {
 async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
-        await client.connect();
+        // await client.connect();
         const usersCollection = client.db('learnLanguage').collection('usersCollection');
         const courseCollection = client.db('learnLanguage').collection('courseCollection');
         const cartCollection = client.db('learnLanguage').collection('cartCollection');
@@ -88,7 +88,7 @@ async function run() {
             res.send(result)
         });
         app.get('/courses', async (req, res) => {
-            const result = await courseCollection.find({ status: "approved", role: 'instructor' }).toArray();
+            const result = await courseCollection.find({ status: "approved" }).toArray();
             res.send(result)
         })
         app.get('/users/:email', verifyJWT, async (req, res) => {
@@ -102,6 +102,18 @@ async function run() {
         app.get('/allUsers/:email', verifyJWT, verifyAdmin, async (req, res) => {
             const result = await usersCollection.find().toArray();
             res.send(result);
+        });
+        app.patch('/changeRole/:email', verifyJWT, verifyAdmin, async (req, res) => {
+            const { id, role } = req.body;
+            const filter = { _id: new ObjectId(id) };
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: {
+                    role: role
+                }
+            }
+            const result = await usersCollection.updateOne(filter, updateDoc, options);
+            res.send(result)
         })
         // initialiy get jwt token
         app.post('/jwt', async (req, res) => {
@@ -183,7 +195,7 @@ async function run() {
         });
         app.patch('/updateCourseInfo/:id', verifyJWT, async (req, res) => {
             const filter = { _id: new ObjectId(req.params.id) };
-            const findCourse = await courseCollection.findOne(filter);
+            const findCourse = await courseCollection.findOne(filter)
             const findInstructor = await usersCollection.findOne({ userEmail: findCourse.instructorEmail });
             const filter2 = { _id: new ObjectId(findInstructor._id) }
             const options = { upsert: true };
@@ -253,8 +265,8 @@ async function run() {
         })
 
         // Send a ping to confirm a successful connection
-        await client.db("admin").command({ ping: 1 });
-        console.log("Pinged your deployment. You successfully connected to MongoDB!");
+        // await client.db("admin").command({ ping: 1 });
+        // console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
         // Ensures that the client will close when you finish/error
         // await client.close();
