@@ -262,6 +262,18 @@ async function run() {
             }
             const result = await courseCollection.updateOne(filter, updateDoc, options);
             res.send(result);
+        });
+        app.put('/giveFeedback/:email/:id', verifyJWT, verifyAdmin, async (req, res) => {
+            const feedback = req.body.feedback
+            const filter = { _id: new ObjectId(req.params.id) }
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: {
+                    feedback: feedback
+                }
+            }
+            const result = await courseCollection.updateOne(filter, updateDoc, options);
+            res.send(result);
         })
 
         // Send a ping to confirm a successful connection
