@@ -2,7 +2,6 @@ const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
-const e = require('express');
 require('dotenv').config();
 const stripe = require("stripe")(process.env.PAYMENT_GATEWAY_KEY)
 const app = express();
@@ -46,6 +45,7 @@ async function run() {
         const courseCollection = client.db('learnLanguage').collection('courseCollection');
         const cartCollection = client.db('learnLanguage').collection('cartCollection');
         const paymentCollection = client.db('learnLanguage').collection('paymentCollection');
+        const blogCollection = client.db('learnLanguage').collection('blogCollection');
         //verify admin
         const verifyAdmin = async (req, res, next) => {
             const email = req.params.email;
@@ -78,6 +78,10 @@ async function run() {
             const result = await usersCollection.find(query).sort({ totalStudents: -1 }).toArray();
             res.send(result)
         });
+        app.get("/allBlogs", async (req, res) => {
+            const result = blogCollection.find().sort({ date: -1 }).toArray();
+            res.send(result);
+        })
         app.get('/topCourses', async (req, res) => {
             const result = await courseCollection.find().sort({ students: -1 }).toArray();
             res.send(result)
