@@ -79,8 +79,8 @@ async function run() {
             res.send(result)
         });
         app.get("/allBlogs", async (req, res) => {
-            const result = blogCollection.find().sort({ date: -1 }).toArray();
-            res.send(result);
+            const result = await blogCollection.find().sort({ date: -1 }).toArray();
+            res.send(result)
         })
         app.get('/topCourses', async (req, res) => {
             const result = await courseCollection.find().sort({ students: -1 }).toArray();
